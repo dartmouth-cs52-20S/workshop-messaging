@@ -40,11 +40,13 @@ Now, we need to install the Twilio Node.js module.
 yarn add twilio --dev
 ```
 
-Let's set up your Twilio phone number and API account. Luckily, we can play around with the Twilio API for free w/ the provided free trial.  
+Let's set up your Twilio phone number and API account. Luckily, we can play around with the Twilio API for free with the provided free trial! Follow the steps below:
 
-< ADD TWILIO ACCOUNT SET UP HERE >
+1. Sign up for free using this link: [Sign up here!](https://www.twilio.com/try-twilio)
+2. Verify your email
+3. In your Dashboard, click the button to get your __trial number__
 
-Now, in your .env file, add the following (replacing the values w/ your own):  
+Now, in your .env file, add the following (replacing the values with your own):  
 ```
 TWILIO_ACCOUNT_SID=YOUR_ACCOUNT_SID
 TWILIO_AUTH_TOKEN=YOUR_AUTH_TOKEN
@@ -290,6 +292,8 @@ and update your button be:
 ```
 :sparkles: :sparkles: :sparkles:
 __YOU'RE DONE!!!__ Congrats! Now you have an interactive form that allows you to text a message to a number. Try entering your number and a message -- you should receive a text from your Twilio number! Additionally, if you type in an unrecognized or bad number, the error red outline will appear.
+
+(Note: Each text you send costs $0.01 -- your free trial gives you $15.50 to begin with, so don't send too many texts!)
 
 
 
