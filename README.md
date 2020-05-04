@@ -12,14 +12,6 @@ In this tutorial, you will be building a simple client-server app to send text m
 
 Clone the provided repo to get started!
 
-## Step by Step
-
-* Explanations of the what **and** the why behind each step. Try to include:
-  * higher level concepts
-  * best practices
-
-Remember to explain any notation you are using.
-
 ### Install dependencies
 ```javascript
 yarn install
@@ -227,10 +219,11 @@ onHandleChange(event) {
 
 :exclamation: Remember that we need to bind this method to the object to ensure that `this` is correct! Remember to add it after the `this.state` segment of the constructor. Try to see if you can do it!
 <details>
-<summary>Click to expand!</summary>
-```js
-this.onHandleChange = this.onHandleChange.bind(this);
-```
+ <summary>Click to expand!</summary>
+ 
+ ```js
+ this.onHandleChange = this.onHandleChange.bind(this);
+ ```
 </details>
 
 Now we can update our rendered JSX and include our new methods. Again, in `SMSForm.js`, add this to `input` underneath `type`,`name`, and `id`:
