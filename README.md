@@ -48,7 +48,7 @@ Let's set up your Twilio phone number and API account. Luckily, we can play arou
 2. Verify your email
 3. In your Dashboard, click the button to get your __trial number__
 
-Now, in your .env file, add the following (replacing the values with your own):  
+Now, in your .env file, add the following (replacing the values with your own credentials):  
 ```
 TWILIO_ACCOUNT_SID=YOUR_ACCOUNT_SID
 TWILIO_AUTH_TOKEN=YOUR_AUTH_TOKEN
@@ -57,7 +57,7 @@ TWILIO_PHONE_NUMBER=YOUR_TWILIO_PHONE_NUMBER
 
 Next, head to your `server/index.js` file. Don't worry about the code that's there, it's just the basics to get your API server running and listening as well as an example route to demonstrate structure.  
 
-Add the following code just below the require statements at the top:
+Add the following code just below the require statements at the top so that connection to the server will be established using the credentials you entered in the .env file:
 
 ```javascript
 const client = require('twilio')(
@@ -86,7 +86,7 @@ app.post('/api/messages', (req, res) => {
 });
 ```
 
-Since we'll be responding to requests with JSON as well, add the content-type header as shown below (`res` is our 'result'):  
+Since we'll be responding to requests with JSON as well, add the content-type header as shown below (`res` is our 'response' and `req` our 'request'):  
 
 ```javascript
 app.post('/api/messages', (req, res) => {
@@ -95,9 +95,9 @@ app.post('/api/messages', (req, res) => {
 });
 ```
 
-Finally, we will send a message using the `client` constant we created earlier. To do so, we will utilize the `client.messages.create()` method that Twilio provides. 
+Finally, we will send a message using the `client` constant we created earlier. To do so, we will utilize the `client.messages.create()` method that Twilio provides. This returns a Promise, which is how successful/failed API requests are handled.
 
-(Note: this method takes a JSON object w/ at least the 'from', 'to' and 'body' parameters.)
+(Note: this method takes a JSON object from the client w/ at least the 'from', 'to' and 'body' parameters.)
 
 ```javascript
 app.post('/api/messages', (req, res) => {
@@ -105,15 +105,16 @@ app.post('/api/messages', (req, res) => {
   client.messages
     .create({
       from: process.env.TWILIO_PHONE_NUMBER,
-      to: req.body.to,      // req.body is what's passed to our API from our client 
-      body: req.body.body
+      // req.body is what's passed to our API from our client
+      to: req.body.to,       // req.body.to is who the client wants to communicate to
+      body: req.body.body   // req.body.body is the message itself
     })
     .then(() => {
-      res.send(JSON.stringify({ success: true }));
+      res.send(JSON.stringify({ success: true }));  // sends a success response to the client
     })
     .catch(err => {
       console.log(err);
-      res.send(JSON.stringify({ success: false }));
+      res.send(JSON.stringify({ success: false })); // sends a failure/error response to the client
     });
 });
 ```
@@ -246,7 +247,7 @@ onChange={this.onHandleChange}
 Now run `yarn run dev` again -- your form should be interactive. Use __React dev tools__ for your browser and you should be able to see the state changing.
 ![React Dev Tools](img/Interactive_update.png)
 
-To hand the form submission, we will build another function called `onSubmit` and use the `fetch` API to make a request to the server. If the response for the server is successful, we will clear the form and set `submitting` to false. If the response is not successful, we will still set `submitting` to false, but also set `error` to true.
+To hand the form submission, we will build another function called `onSubmit` and use the `fetch` API to make a request to the server using the POST method we just created in the server. If the response for the server is successful, we will clear the form and set `submitting` to false. If the response is not successful, we will still set `submitting` to false, but also set `error` to true. See the server's Promise if this doesn't make sense.
 ```js
  onSubmit(event) {
     event.preventDefault();
@@ -258,6 +259,7 @@ To hand the form submission, we will build another function called `onSubmit` an
       },
       body: JSON.stringify(this.state.message)
     })
+      // Read the server's response and check if its API request was successful
       .then(res => res.json())
       .then(data => {
         if (data.success) {
@@ -321,19 +323,21 @@ Here's a resource for [github markdown](https://guides.github.com/features/maste
 
 ## Summary / What you Learned
 
-* [ ] can be checkboxes
+* [ ] Setting up a server that makes Twilio API calls
+* [ ] Creating a route for a POST request
+* [ ] Setting up a client that creates an API request and handles API request errors
 
 ## Reflection
 
 *2 questions for the workshop participants to answer (very short answer) when they submit the workshop. These should try to get at something core to the workshop, the what and the why.*
 
-* [ ] 2 reflection questions
-* [ ] 2 reflection questions
+* [ ] Why did we create server and client files?
+* [ ] What is the point of having Promises in our code?
 
 
 ## Resources
 
-* cite any resources
+* https://www.twilio.com/blog/send-an-sms-react-twilio
 # React application with Express server
 
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app). Then an Express server was added in the `server` directory. The server is proxied via the `proxy` key in `package.json`.
