@@ -118,7 +118,182 @@ SWEET! That's it for the server-side stuff, let's jump into the client!
 
 
 ### The client-side
+#### Creating a simple form
+We'll begin working on the client side now! First change into the `src` directory and create a new component named `SMSForm.js`. Let's create a simple form with an input for the phone number, a textarea for the message, and a button to submit.
+```js
+import React, { Component } from 'react';
 
+class SMSForm extends Component {
+render() {
+    return (
+      <form className="sms-form">
+        <div>
+          <label htmlFor="to">To:</label>
+          <input
+             type="tel"
+             name="to"
+             id="to"
+          />
+        </div>
+        <div>
+          <label htmlFor="body">Body:</label>
+          <textarea name="body" id="body"/>
+        </div>
+        <button type="submit">
+          Send message
+        </button>
+      </form>
+    );
+  }
+}
+export default SMSForm;
+```
+
+Let's make the form a little prettier with some CSS! Create a filed called `SMSForm.css` in your `src` directory and add the following:
+``` js
+form {
+    text-align: left;
+    padding: 1em;
+  }
+  form label {
+    display: block;
+  }
+  form input,
+  form textarea {
+    font-size: 1em;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  form div {
+    margin-bottom: 0.5em;
+  }
+  form button {
+    font-size: 1em;
+    width: 100%;
+  }
+  form error {
+    outline: 2px solid #f00;
+  }
+```
+
+Remember to import the CSS at the top of `SMSForm.js`! See if you can import it by yourself.
+<details>
+ <summary>Click to expand!</summary>
+ 
+ ```js
+import React, { Component } from 'react';
+import './SMSForm.css';
+ ```
+</details>
+
+Now you should have have something that looks like this:
+![Form](img/After_updating_form.png)
+
+If you try typing and submitting something, you'll find out that the form doesn't do anything yet! Let's make our form interactive.
+
+We'll start by setting up some initial state in the constructor of our `SMSForm.js`. We'll need to store the form inputs, whether the form is currently being submitted (so that we can disable the submit button) and whether there was an error. Use the following for the constructor:
+```js
+class SMSForm extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      message: {
+        to: '',
+        body: ''
+      },
+      submitting: false,
+      error: false
+    };
+  }
+
+  // rest of the component
+}
+```
+
+We will also need a method to handle changes in our form and update the state -- just like we did in Lab 3! Write the following code for the method `onHandleChange`.
+```js
+onHandleChange(event) {
+    const name = event.target.getAttribute('name');
+    this.setState({
+      message: { ...this.state.message, [name]: event.target.value }
+    });
+  }
+```
+
+:exclamation: Remember that we need to bind this method to the object to ensure that `this` is correct! Remember to add it after the `this.state` segment of the constructor. Try to see if you can do it!
+<details>
+<summary>Click to expand!</summary>
+```js
+this.onHandleChange = this.onHandleChange.bind(this);
+```
+</details>
+
+Now we can update our rendered JSX and include our new methods. Again, in `SMSForm.js`, add this to `input` underneath `type`,`name`, and `id`:
+```js
+value={this.state.message.to}
+onChange={this.onHandleChange}
+```
+Also add this to `textarea` underneath `name` and `id`:
+```js
+value={this.state.message.body}
+onChange={this.onHandleChange}
+```
+
+Now run `yarn run dev` again -- your form should be interactive. Use __React dev tools__ for your browser and you should be able to see the state changing.
+![React Dev Tools](img/Interactive_update.png)
+
+To hand the form submission, we will build another function called `onSubmit` and use the `fetch` API to make a request to the server. If the response for the server is successful, we will clear the form and set `submitting` to false. If the response is not successful, we will still set `submitting` to false, but also set `error` to true.
+```js
+ onSubmit(event) {
+    event.preventDefault();
+    this.setState({ submitting: true });
+    fetch('/api/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(this.state.message)
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          this.setState({
+            error: false,
+            submitting: false,
+            message: {
+              to: '',
+              body: ''
+            }
+          });
+        } else {
+          this.setState({
+            error: true,
+            submitting: false
+          });
+        }
+      });
+  }
+  ```
+:exclamation: Remember to bind this method to the object as well! Add this line right after your `onHandleChange` binding in the constructor.
+
+Now we need to add our `onSubmit` method to the form and update the button's `disabled` property.
+Update your form to be:
+```js
+<form
+    onSubmit={this.onSubmit}
+    className={this.state.error ? 'error sms-form' : 'sms-form'}
+>
+```
+and update your button be:
+```js
+<button type="submit" disabled={this.state.submitting}>
+```
+:sparkles: :sparkles: :sparkles:
+__YOU'RE DONE!!!__ Congrats! Now you have an interactive form that allows you to text a message to a number. Try entering your number and a message -- you should receive a text from your Twilio number! Additionally, if you type in an unrecognized or bad number, the error red outline will appear.
+
+
+
+## Tim's stuff/recommendations
 
 ![screen shots are helpful](img/screenshot.png)
 
