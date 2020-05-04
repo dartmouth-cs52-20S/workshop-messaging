@@ -32,6 +32,8 @@ At this point, you can verify everything's working by running:
 ```javascript
 yarn run dev // then go to http://localhost:3000/ in your browser
 ```
+It should look something like this:
+![Setup pic](img/After_setup.png)
 
 ### Building the server-side stuff
 
