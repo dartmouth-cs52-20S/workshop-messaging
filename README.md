@@ -106,7 +106,7 @@ app.post('/api/messages', (req, res) => {
     })
     .catch(err => {
       console.log(err);
-      res.send(JSON.stringify({ success: false })); // sends a failure/error response to the client
+      res.send(JSON.stringify({ success: false, errorMsg: err.toString() })); // sends a failure/error response to the client
     });
 });
 ```
@@ -121,7 +121,7 @@ We'll begin working on the client side now! First change into the `src` director
 import React, { Component } from 'react';
 
 class SMSForm extends Component {
-render() {
+  render() {
     return (
       <form className="sms-form">
         <div>
@@ -147,30 +147,46 @@ export default SMSForm;
 ```
 
 Let's make the form a little prettier with some CSS! Create a filed called `SMSForm.css` in your `src` directory and add the following:
-``` js
+``` css
 form {
-    text-align: left;
-    padding: 1em;
-  }
-  form label {
-    display: block;
-  }
-  form input,
-  form textarea {
-    font-size: 1em;
-    width: 100%;
-    box-sizing: border-box;
-  }
-  form div {
-    margin-bottom: 0.5em;
-  }
-  form button {
-    font-size: 1em;
-    width: 100%;
-  }
-  form error {
-    outline: 2px solid #f00;
-  }
+  padding: .5em;
+  width: 400px;
+  max-width: 80%;
+  font-size: .8em;
+  text-align: left;
+}
+form label {
+  display: block;
+  margin-bottom: .5em;
+}
+form input,
+form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: .25em;
+  font-size: 1em;
+}
+form div {
+  margin-bottom: 1em;
+}
+form button {
+  width: 100%;
+  padding: .5em;
+  color: rgb(97,218,251);
+  background-color: transparent;
+  border: solid 1px rgb(97,218,251);
+  border-radius: 5px;
+  font-size: 1em;
+}
+form.error {
+  outline: 2px solid #f00;
+}
+.error-msg{
+  margin-top: 1.0em;
+  color: #f00;
+  white-space: normal;
+  font-size: 0.8em;
+}
 ```
 
 Remember to import the CSS at the top of `SMSForm.js`! See if you can import it by yourself.
@@ -182,6 +198,20 @@ import React, { Component } from 'react';
 import './SMSForm.css';
  ```
 </details>
+
+To display this component, change the `App.js` file in your `src` directory. You can get rid of all the code in the `App` class and only leave a render function:
+```js
+return (
+      <div className="App">
+        <header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+
+          <SMSForm />
+        </header>
+      </div>
+    );
+  }
+```
 
 Now you should have have something that looks like this:
 ![Form](img/After_updating_form.png)
@@ -199,7 +229,10 @@ class SMSForm extends Component {
         body: ''
       },
       submitting: false,
-      error: false
+      error: {
+        state: false,
+        msg: ''
+      }
     };
   }
 
@@ -240,38 +273,45 @@ onChange={this.onHandleChange}
 Now run `yarn run dev` again -- your form should be interactive. Use __React dev tools__ for your browser and you should be able to see the state changing.
 ![React Dev Tools](img/Interactive_update.png)
 
-To hand the form submission, we will build another function called `onSubmit` and use the `fetch` API to make a request to the server using the POST method we just created in the server. If the response for the server is successful, we will clear the form and set `submitting` to false. If the response is not successful, we will still set `submitting` to false, but also set `error` to true. See the server's Promise if this doesn't make sense.
+To hand the form submission, we will build another function called `onSubmit` and use the `fetch` API to make a request to the server using the POST method we just created in the server. If the response for the server is successful, we will clear the form and set `submitting` to false. If the response is not successful, we will still set `submitting` to false, but also set `error.state` to true and update the error message in `error.msg`. See the server's Promise if this doesn't make sense.
 ```js
- onSubmit(event) {
-    event.preventDefault();
-    this.setState({ submitting: true });
-    fetch('/api/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(this.state.message)
-    })
-      // Read the server's response and check if its API request was successful
-      .then(res => res.json())
-      .then(data => {
-        if (data.success) {
-          this.setState({
-            error: false,
-            submitting: false,
-            message: {
-              to: '',
-              body: ''
-            }
-          });
-        } else {
-          this.setState({
-            error: true,
-            submitting: false
-          });
+onSubmit(event) {
+  event.preventDefault();
+  this.setState({ submitting: true });
+  fetch('/api/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(this.state.message)
+  })
+  // Read the server's response and check if its API request was successful
+  .then(res => res.json())
+  .then(data => {
+    console.log(data);
+    if (data.success) {
+      this.setState({
+        error: {
+          state: false,
+          msg: ''
+        },
+        submitting: false,
+        message: {
+          to: '',
+          body: ''
         }
       });
-  }
+    } else {
+      this.setState({
+        error: {
+          state: true,
+          msg: data.errorMsg
+        },
+        submitting: false
+      });
+    }
+  });
+}
   ```
 :exclamation: Remember to bind this method to the object as well! Add this line right after your `onHandleChange` binding in the constructor.
 
@@ -280,38 +320,24 @@ Update your form to be:
 ```js
 <form
     onSubmit={this.onSubmit}
-    className={this.state.error ? 'error sms-form' : 'sms-form'}
+    className={this.state.error.state ? 'error sms-form' : 'sms-form'}
 >
 ```
 and update your button be:
 ```js
 <button type="submit" disabled={this.state.submitting}>
 ```
+Add a new line at the bottom of the form to display the error message:
+
+```js
+  </button>
+  <div className="error-msg">{this.state.error.msg}</div> // new line
+</form>
+```
 :sparkles: :sparkles: :sparkles:
 __YOU'RE DONE!!!__ Congrats! Now you have an interactive form that allows you to text a message to a number. Try entering your number and a message -- you should receive a text from your Twilio number! Additionally, if you type in an unrecognized or bad number, the error red outline will appear.
 
 (Note: Each text you send costs $0.01 -- your free trial gives you $15.50 to begin with, so don't send too many texts!)
-
-
-
-## Tim's stuff/recommendations
-
-![screen shots are helpful](img/screenshot.png)
-
-:sunglasses: GitHub markdown files [support emoji notation](http://www.emoji-cheat-sheet.com/)
-
-Here's a resource for [github markdown](https://guides.github.com/features/mastering-markdown/).
-
-## Use collapsible sections when you are giving away too much code
-<details>
- <summary>Click to expand!</summary>
- 
- ```js
- // some code
- console.log('hi');
- ```
-</details>
-
 
 
 ## Summary / What you Learned
@@ -322,8 +348,6 @@ Here's a resource for [github markdown](https://guides.github.com/features/maste
 
 ## Reflection
 
-*2 questions for the workshop participants to answer (very short answer) when they submit the workshop. These should try to get at something core to the workshop, the what and the why.*
-
 * [ ] Why did we create server and client files?
 * [ ] What is the point of having Promises in our code?
 
@@ -331,7 +355,8 @@ Here's a resource for [github markdown](https://guides.github.com/features/maste
 ## Resources
 
 * https://www.twilio.com/blog/send-an-sms-react-twilio
-# React application with Express server
+* https://www.twilio.com/docs/api/errors
+<!-- # React application with Express server
 
 This project was bootstrapped with [Create React App](https://github.com/facebookincubator/create-react-app). Then an Express server was added in the `server` directory. The server is proxied via the `proxy` key in `package.json`.
 
@@ -369,4 +394,4 @@ The React application will run on port 3000 and the server port 3001.
 
 ## React Twilio starter
 
-The [twilio branch](https://github.com/philnash/react-express-starter/tree/twilio) is a similar setup but also provides endpoints with basic [Access Tokens](https://www.twilio.com/docs/iam/access-tokens) for [Twilio Programmable Chat](https://www.twilio.com/docs/chat) and [Twilio Programmable Video](https://www.twilio.com/docs/video). You can use the project as a base for building React chat or video applications.
+The [twilio branch](https://github.com/philnash/react-express-starter/tree/twilio) is a similar setup but also provides endpoints with basic [Access Tokens](https://www.twilio.com/docs/iam/access-tokens) for [Twilio Programmable Chat](https://www.twilio.com/docs/chat) and [Twilio Programmable Video](https://www.twilio.com/docs/video). You can use the project as a base for building React chat or video applications. -->
