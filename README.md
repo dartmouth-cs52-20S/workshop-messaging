@@ -2,7 +2,7 @@
 
 ![](http://i.giphy.com/eUh8NINbZf9Ys.gif)
 
-Brief motivation here as well as in presentation
+Today, you guys will work with messaging!
 
 ## Overview
 
